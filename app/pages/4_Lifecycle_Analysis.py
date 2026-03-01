@@ -132,8 +132,9 @@ if not eol_wave.empty:
     fig_wave.update_traces(textfont_color=BRAND["white"])
     st.plotly_chart(fig_wave, use_container_width=True)
     st.markdown(insight_caption(
-        "Bars to the LEFT of the orange line = already expired. "
-        "Bars to the RIGHT = upcoming expirations requiring budget planning."
+        "Every bar to the left of the orange line represents devices that have already expired — "
+        "they are running right now without manufacturer support. Bars to the right show future expirations, "
+        "giving leadership a clear window to plan and fund replacement waves before they become emergencies."
     ), unsafe_allow_html=True)
 
 # EoS wave
@@ -210,8 +211,10 @@ fig_hist.update_layout(
 )
 st.plotly_chart(fig_hist, use_container_width=True)
 st.markdown(insight_caption(
-    "Risk score (0–100) combines EoL/EoS status (primary) and device uptime (secondary). "
-    "Score ≥75 = Critical, ≥50 = High, ≥25 = Medium, <25 = Low."
+    "Every device gets a score from 0 to 100 — higher means more urgent to replace. "
+    "The score is driven mainly by whether the device has passed its official Cisco end-of-life date. "
+    "Scores of 75 and above are Critical and should be in the next refresh wave. "
+    "The taller the red bars on the right side, the more pressing the fleet's overall situation."
 ), unsafe_allow_html=True)
 
 st.divider()
@@ -267,8 +270,9 @@ for _, _row in _src_totals.iterrows():
     )
 st.plotly_chart(fig_stage_src, use_container_width=True)
 st.markdown(insight_caption(
-    "'Unknown - No Lifecycle Data' indicates models not yet in the lifecycle database. "
-    "These require manual model lookup or vendor engagement."
+    "The gray bars show devices that do not appear in Cisco's official lifecycle database — "
+    "Southern Company has no confirmed end-of-life date for them. This does not mean they are safe; "
+    "it means the risk is invisible without further investigation. Page 7 uses machine learning to estimate their status."
 ), unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
@@ -322,8 +326,10 @@ if "support_level" in df.columns:
         )
     st.plotly_chart(fig_sup_stage, use_container_width=True)
     st.markdown(insight_caption(
-        "Focus on devices where Lifecycle Stage = 'Critical - Past EoL' AND Support = 'Not Available' — "
-        "these are doubly exposed with no vendor fallback and no active support contract."
+        "Look at the 'Critical - Past EoL' column — any 'Not Available' portion stacked inside it "
+        "represents devices that have both expired Cisco support AND no active maintenance contract. "
+        "If one of those devices fails in the field, there is no vendor backup plan. "
+        "These are the highest-priority devices to escalate and replace."
     ), unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
@@ -500,10 +506,11 @@ else:
     total_5yr = proj_df["total_cost"].sum()
     unknown_count = len(df[df["eos_date"].isna() & df["eol_date"].isna()])
     st.markdown(insight_caption(
-        f"This projection represents a **floor** — confirmed refresh cost of **${total_5yr:,.0f}** "
-        f"over 5 years for devices with known lifecycle dates. "
-        f"An additional **{unknown_count:,} devices** have unknown lifecycle status, "
-        f"adding unquantified capital requirements likely exceeding this amount."
+        f"This is the minimum confirmed capital Southern Company will need for network refreshes through 2031 — "
+        f"**${total_5yr:,.0f}** total, counting only devices where Cisco has published an end-of-life date. "
+        f"The additional **{unknown_count:,} devices** with no lifecycle data on file are not included here, "
+        f"so the true cost is likely significantly higher. Use these projections to anchor budget conversations now, "
+        f"before costs become reactive and unplanned."
     ), unsafe_allow_html=True)
 
     # Download

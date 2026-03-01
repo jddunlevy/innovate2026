@@ -178,8 +178,10 @@ fig_state_cost.update_layout(
 )
 st.plotly_chart(fig_state_cost, use_container_width=True)
 st.markdown(insight_caption(
-    "Risk exposure = replacement cost × risk score. "
-    "States at the top require the most urgent refresh investment."
+    "This ranks every state by the dollar value of risk they are carrying today. "
+    "It is not just about which states have the most devices — it weights by urgency, "
+    "so states at the top have both expensive equipment and high risk scores. "
+    "These are where the first refresh dollars should go."
 ), unsafe_allow_html=True)
 
 st.divider()
@@ -235,8 +237,10 @@ for _, _row in _type_cost_totals.iterrows():
     )
 st.plotly_chart(fig_type_cost, use_container_width=True)
 st.markdown(insight_caption(
-    "Each bar shows the total cost to replace all devices of that type, "
-    "colored by urgency. Red = Critical (refresh now)."
+    "Each bar is the total price tag to replace every device in that category. "
+    "The red portion represents devices already past their end-of-life date — "
+    "that is deferred investment accumulating risk right now. "
+    "Use this chart to guide vendor procurement priorities and negotiate by device type."
 ), unsafe_allow_html=True)
 
 st.divider()

@@ -94,10 +94,14 @@ col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.metric("Total Active Devices", f"{total:,}")
 with col2:
+    ml_analyzed = (df["lifecycle_stage"] == "Unknown - No Lifecycle Data").sum()
     st.metric(
-        "Critical Risk Devices", f"{critical:,}",
-        delta=f"{critical/total*100:.1f}% of fleet" if total else "—",
-        delta_color="inverse",
+        "Scored by ML Analysis",
+        f"{ml_analyzed:,}",
+        delta=f"{ml_analyzed/total*100:.1f}% — no lifecycle data" if total else "—",
+        delta_color="off",
+        help="Devices with no EoS/EoL data in Cisco's lifecycle database. "
+             "Risk scores for these devices are predicted by the ML model on page 7.",
     )
 with col3:
     st.metric("Risk Cost Exposure", f"${exposure:,.0f}")
@@ -160,7 +164,7 @@ fig_donut.update_layout(
     margin=dict(t=50, b=20),
 )
 st.plotly_chart(fig_donut, use_container_width=True)
-st.markdown(insight_caption("Each tier reflects composite risk score: EoL/EoS status + device age."), unsafe_allow_html=True)
+st.markdown(insight_caption("Every device is scored from 0 to 100 based on whether its Cisco support has expired. This chart shows how the entire fleet breaks down — the bigger the red slice, the more devices need urgent replacement."), unsafe_allow_html=True)
 
 st.divider()
 
@@ -216,7 +220,7 @@ fig_stage.update_layout(
     yaxis_title="",
 )
 st.plotly_chart(fig_stage, use_container_width=True)
-st.markdown(insight_caption("Devices without a model match in the lifecycle database are flagged as Unknown."), unsafe_allow_html=True)
+st.markdown(insight_caption("'Critical' devices are already past their official end-of-life date and running without Cisco support today. The gray 'Unknown' bar shows devices with no lifecycle record on file at all — those are evaluated by the machine learning model on page 7."), unsafe_allow_html=True)
 
 st.divider()
 
@@ -263,7 +267,7 @@ if not state_matrix.empty:
             "total_cost":     ":,.0f",
             "avg_risk_score": ":.1f",
         },
-        color_continuous_scale=[BRAND["light_blue"], BRAND["dark_blue"]],
+        color_continuous_scale=[BRAND["dark_blue"], BRAND["light_blue"]],
         size_max=60,
         title="Investment Prioritization Matrix by State",
         labels={
@@ -272,20 +276,24 @@ if not state_matrix.empty:
             "critical_count": "Critical Devices",
         },
     )
+
+    # Shade the upper-right (high cost, high risk) priority quadrant
+    x_max = state_matrix["total_cost"].max() * 1.15
+    y_max = state_matrix["avg_risk_score"].max() * 1.15
+    fig_matrix.add_shape(
+        type="rect",
+        x0=med_cost, x1=x_max,
+        y0=med_risk, y1=y_max,
+        xref="x", yref="y",
+        fillcolor="rgba(211, 47, 47, 0.10)",
+        line=dict(width=0),
+        layer="below",
+    )
+
     fig_matrix.add_hline(y=med_risk, line_dash="dash", line_color=BRAND["accent_orange"],
                          annotation_text="Median risk", annotation_position="top right")
     fig_matrix.add_vline(x=med_cost, line_dash="dash", line_color=BRAND["accent_orange"],
                          annotation_text="Median cost", annotation_position="top right")
-
-    # "PRIORITIZE NOW" label in upper-right quadrant
-    fig_matrix.add_annotation(
-        text="<b>PRIORITIZE NOW</b>",
-        x=state_matrix["total_cost"].quantile(0.85),
-        y=state_matrix["avg_risk_score"].quantile(0.85),
-        font=dict(color=RISK_COLORS["Critical"], size=13),
-        showarrow=False,
-        bgcolor="rgba(255,255,255,0.7)",
-    )
 
     fig_matrix.update_layout(
         title_font_color=BRAND["white"],
@@ -298,8 +306,9 @@ if not state_matrix.empty:
     )
     st.plotly_chart(fig_matrix, use_container_width=True)
     st.markdown(insight_caption(
-        "States above the orange dashed lines have above-median risk AND cost — "
-        "these are the highest-priority refresh targets."
+        "States in the shaded red zone have both above-average risk and above-average replacement cost — "
+        "they need budget attention first. Each bubble is a state; bigger means more devices. "
+        "Hover any bubble to see exact device counts and cost figures."
     ), unsafe_allow_html=True)
 
 st.divider()
@@ -350,7 +359,7 @@ for _, _row in _type_totals.iterrows():
         font=dict(color=BRAND["white"], size=11, family="Arial"),
     )
 st.plotly_chart(fig_type, use_container_width=True)
-st.markdown(insight_caption("Stacked bars show the risk composition within each device category."), unsafe_allow_html=True)
+st.markdown(insight_caption("Each bar represents a device category — switches, routers, access points, and so on. The colors show the urgency breakdown within each type. A large red section means that category has many devices already past their end-of-life date and needing replacement now."), unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
 # Support coverage vs risk tier
@@ -407,8 +416,9 @@ if "support_level" in df.columns:
         )
     st.plotly_chart(fig_support, use_container_width=True)
     st.markdown(insight_caption(
-        "'Not Available' = devices from Network Analytics and Cisco Prime sources where support "
-        "contract data is not collected. CatCtr is the authoritative source for support level."
+        "'Not Available' means no active support contract is on record for that device. "
+        "When those same devices are also high-risk, there is no vendor safety net if something fails — "
+        "that is the most dangerous and costly combination to leave unaddressed."
     ), unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------

@@ -292,10 +292,10 @@ if train_ok:
             st.info("No devices predicted as Likely Past EoL under current filters.")
 
     st.markdown(insight_caption(
-        f"Of **{n_unknown:,}** devices with no lifecycle data, the model predicts "
-        f"**{likely_eol_count:,}** are likely past End-of-Life — representing unquantified "
-        f"refresh cost and security exposure. Model trained on {artifacts['n_train']:,} labeled devices "
-        f"with {accuracy_pct:.1f}% holdout accuracy."
+        f"Of the **{n_unknown:,}** devices with no Cisco lifecycle record, the model estimates "
+        f"**{likely_eol_count:,}** are probably already past end-of-life — hidden risk not captured anywhere else in the dataset. "
+        f"The model was trained on {artifacts['n_train']:,} devices where lifecycle dates are confirmed "
+        f"and achieved **{accuracy_pct:.1f}%** accuracy on devices it had never seen before."
     ), unsafe_allow_html=True)
 
 st.divider()
@@ -513,8 +513,9 @@ if train_ok:
     )
     st.plotly_chart(fig_imp, use_container_width=True)
     st.markdown(insight_caption(
-        "Features with high permutation importance are the strongest predictors of EoL status. "
-        "Features near zero contribute little — their values could be shuffled with no accuracy penalty."
+        "This shows which pieces of information the model relies on most when predicting whether a device is past its end-of-life. "
+        "Longer bars mean stronger influence on the prediction. "
+        "Features with bars near zero had almost no impact — removing them would not change the results."
     ), unsafe_allow_html=True)
 
     st.markdown("---")
@@ -559,8 +560,10 @@ if train_ok:
     )
     st.plotly_chart(fig_compare, use_container_width=True)
     st.markdown(insight_caption(
-        "Unlabeled devices cluster at low risk scores (no lifecycle dates → no lifecycle penalty). "
-        "The ML predictor reveals which of these devices likely belong in the high-risk tail."
+        "Devices with no lifecycle record (orange) pile up at low risk scores — not because they are safe, "
+        "but because the standard scoring system has nothing to score them on. "
+        "The machine learning model identifies which of those orange devices actually behave like high-risk devices, "
+        "surfacing risk that would otherwise remain completely invisible."
     ), unsafe_allow_html=True)
 
     # Device Explainer
@@ -683,8 +686,9 @@ fig_scatter.update_layout(
 )
 st.plotly_chart(fig_scatter, use_container_width=True)
 st.markdown(insight_caption(
-    "Anomalous devices (red) in the LOW risk score region are the key insight — "
-    "conventional scoring missed them, but their feature patterns deviate from fleet norms."
+    "The most important dots to notice are the red ones sitting low on the chart — low risk score but flagged as anomalous. "
+    "These are devices the standard scoring system rated as low risk, but whose combination of age, cost, and uptime "
+    "is statistically unusual compared to the rest of the fleet. They warrant a manual review before the next refresh cycle."
 ), unsafe_allow_html=True)
 
 st.markdown("---")
@@ -725,8 +729,9 @@ fig_donut.update_layout(
 )
 st.plotly_chart(fig_donut, use_container_width=True)
 st.markdown(insight_caption(
-    "Low and Medium slices in this donut represent devices that passed conventional "
-    "risk scoring but exhibit anomalous feature patterns requiring audit."
+    "The yellow and green slices show devices that scored as Medium or Low risk by the standard system — "
+    "but the model flagged them as behaving unusually. These are the 'hidden risk' devices a simple rules-based checklist would miss entirely. "
+    "They are the reason anomaly detection adds value on top of standard lifecycle scoring."
 ), unsafe_allow_html=True)
 
 # Top 30 anomalous devices table

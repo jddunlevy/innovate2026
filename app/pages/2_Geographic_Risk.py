@@ -142,8 +142,9 @@ else:
     )
     st.plotly_chart(fig_map, use_container_width=True)
     st.markdown(insight_caption(
-        f"Bubble size = risk score. Color = risk tier. "
-        f"Hover any device for full details. Showing {len(geo_df):,} located devices."
+        f"Each dot is a physical device plotted at its real-world location. Bigger dots carry higher risk scores, "
+        f"and red dots are critical. Click or hover any dot to see the device name, type, site, and risk details. "
+        f"Showing {len(geo_df):,} devices with confirmed location data."
     ), unsafe_allow_html=True)
 
 st.divider()
@@ -200,7 +201,7 @@ fig_choro.update_layout(
     coloraxis_colorbar=dict(title="Critical<br>Devices"),
 )
 st.plotly_chart(fig_choro, use_container_width=True)
-st.markdown(insight_caption("Darker blue = more critical devices. Hover a state for full breakdown."), unsafe_allow_html=True)
+st.markdown(insight_caption("Darker shading means more critical-risk devices in that state. Use this to quickly identify which regions of Southern Company's territory need the most urgent network attention. Hover any state for a full breakdown of device counts and cost exposure."), unsafe_allow_html=True)
 
 st.divider()
 
@@ -266,8 +267,9 @@ if not geo_df.empty:
         )
         st.plotly_chart(fig_clusters, use_container_width=True)
         st.markdown(insight_caption(
-            "Each bubble = one refresh cluster. Bubble size = device count. "
-            "Color = average risk score. Higher risk clusters should be prioritized."
+            "Each bubble is a group of nearby devices that can be upgraded in a single site visit — "
+            "fewer truck rolls, lower total cost. Bigger bubbles mean more devices can be batched together. "
+            "Brighter-colored clusters carry higher average risk and should be scheduled first."
         ), unsafe_allow_html=True)
 
         # Cluster summary table

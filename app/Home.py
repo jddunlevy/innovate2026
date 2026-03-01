@@ -230,10 +230,15 @@ else:
     with col1:
         st.metric("Total Active Devices", f"{len(df):,}")
     with col2:
-        crit = (df["risk_tier"] == "Critical").sum()
-        st.metric("Critical Risk Devices", f"{crit:,}",
-                  delta=f"{crit/len(df)*100:.1f}% of fleet",
-                  delta_color="inverse")
+        ml_analyzed = (df["lifecycle_stage"] == "Unknown - No Lifecycle Data").sum()
+        st.metric(
+            "Scored by ML Analysis",
+            f"{ml_analyzed:,}",
+            delta=f"{ml_analyzed/len(df)*100:.1f}% — no lifecycle data",
+            delta_color="off",
+            help="Devices with no EoS/EoL data in Cisco's lifecycle database. "
+                 "Risk scores for these devices are predicted by the ML model on page 7.",
+        )
     with col3:
         exposure = df["risk_cost_exposure"].sum()
         st.metric("Risk Cost Exposure", f"${exposure:,.0f}")
