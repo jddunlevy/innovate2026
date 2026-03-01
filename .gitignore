@@ -1,0 +1,27 @@
+# Virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Data files (too large / sensitive for version control)
+*.xlsx
+*.xls
+data/raw/
+
+# Presentation / brand files
+*.pptx
+*.pdf
+
+# Streamlit secrets
+.streamlit/secrets.toml
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
