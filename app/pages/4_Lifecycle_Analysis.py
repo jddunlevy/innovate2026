@@ -287,39 +287,50 @@ if "support_level" in df.columns:
         "no vendor fallback with active end-of-life exposure."
     )
 
+    _stage_bucket_map = {
+        "Critical - Past EoL":         "Critical",
+        "High Risk - Past EoS":        "At Risk",
+        "Approaching EoL (<1yr)":      "At Risk",
+        "Approaching EoS (<6mo)":      "At Risk",
+        "Active - Supported":          "At Risk",
+        "Unknown - No Lifecycle Data": "Unknowns",
+    }
     support_stage = (
-        df.assign(support_display=df["support_level"].fillna("Not Available"))
-        .groupby(["lifecycle_stage", "support_display"])
+        df.assign(
+            support_display=df["support_level"].fillna("Not Available"),
+            stage_bucket=df["lifecycle_stage"].map(_stage_bucket_map).fillna("Unknowns"),
+        )
+        .groupby(["stage_bucket", "support_display"])
         .size().reset_index(name="count")
     )
 
     fig_sup_stage = px.bar(
         support_stage,
-        x="lifecycle_stage",
+        x="stage_bucket",
         y="count",
         color="support_display",
         barmode="stack",
         title="Support Level Breakdown by Lifecycle Stage",
         labels={
-            "lifecycle_stage": "Lifecycle Stage",
+            "stage_bucket":    "Lifecycle Stage",
             "count":           "Device Count",
             "support_display": "Support Level",
         },
-        category_orders={"lifecycle_stage": LIFECYCLE_STAGE_ORDER},
+        category_orders={"stage_bucket": ["Critical", "At Risk", "Unknowns"]},
     )
     fig_sup_stage.update_layout(
         title_font_color=BRAND["white"],
         font=dict(color=BRAND["white"], family="Arial"),
         plot_bgcolor=DARK_PLOT_BG,
         paper_bgcolor="rgba(0,0,0,0)",
-        xaxis=dict(tickangle=-20, gridcolor="#1a3a5c"),
+        xaxis=dict(tickangle=0, gridcolor="#1a3a5c"),
         yaxis=dict(gridcolor="#1a3a5c"),
-        margin=dict(t=60, b=80),
+        margin=dict(t=60, b=60),
     )
-    _stage_totals = support_stage.groupby("lifecycle_stage")["count"].sum().reset_index()
+    _stage_totals = support_stage.groupby("stage_bucket")["count"].sum().reset_index()
     for _, _row in _stage_totals.iterrows():
         fig_sup_stage.add_annotation(
-            x=_row["lifecycle_stage"], y=_row["count"],
+            x=_row["stage_bucket"], y=_row["count"],
             text=f"{_row['count']:,}",
             showarrow=False, yshift=10,
             font=dict(color=BRAND["white"], size=11, family="Arial"),
